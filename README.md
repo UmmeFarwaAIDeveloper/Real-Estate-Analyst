@@ -1,5 +1,5 @@
 Real Estate Analyst (n8n Workflow)
-This n8n workflow automates the process of fetching Zillow property listings, extracting key details, converting prices from USD to PKR, and writing the results—including a final recommendation—into a Google Sheet.
+This n8n workflow automates the process of fetching Zillow property listings, extracting key details, converting prices from USD to PKR, and writing the results including a final recommendation, into a Google Sheet.
 Ideal for real estate analysis and investment decision-making.
 
 Features
