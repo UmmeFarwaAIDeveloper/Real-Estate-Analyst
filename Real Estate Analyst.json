@@ -1,0 +1,572 @@
+{
+  "name": "Real Estate Analyst",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        -640
+      ],
+      "id": "e4ca359d-94a8-4d0a-b845-7afcba04e839",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://r.jina.ai/https://www.zillow.com/homes/?category=SEMANTIC&searchQueryState=%7B%22filterState%22%3A%7B%22isRecentlySold%22%3A%7B%22value%22%3Afalse%7D%2C%22isPreMarketPreForeclosure%22%3A%7B%22value%22%3Afalse%7D%2C%22isPreMarketForeclosure%22%3A%7B%22value%22%3Afalse%7D%2C%22isForRent%22%3A%7B%22value%22%3Afalse%7D%2C%22isForSaleByAgent%22%3A%7B%22value%22%3Atrue%7D%2C%22isForSaleByOwner%22%3A%7B%22value%22%3Atrue%7D%2C%22isAuction%22%3A%7B%22value%22%3Atrue%7D%2C%22isComingSoon%22%3A%7B%22value%22%3Atrue%7D%2C%22isForSaleForeclosure%22%3A%7B%22value%22%3Atrue%7D%2C%22isNewConstruction%22%3A%7B%22value%22%3Atrue%7D%2C%22sortSelection%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A40%2C%22regionType%22%3A2%7D%5D%2C%22usersSearchTerm%22%3A%22new%20jersey%22%7D",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -864,
+        -640
+      ],
+      "id": "f1089b85-bf48-483a-b6e4-bf3182cb3cae",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EU0XnVQeplYe3Xye",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.data }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"results\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"title\": { \"type\": \"string\" },\n        \"address\": { \"type\": \"string\" },\n        \"price_in_inr\": { \"type\": \"string\" },\n        \"price_in_usd\": { \"type\": \"string\" },\n        \"bedrooms\": { \"type\": \"number\" },\n        \"bathrooms\": { \"type\": \"number\" },\n        \"property_type\": { \"type\": \"string\" },\n        \"size_sqft\": { \"type\": \"string\" },\n        \"url\": { \"type\": \"string\" },\n        \"realtor\": { \"type\": \"string\" },\n        \"image_url\": { \"type\": \"string\" },\n        \"Final_Recommendation\": { \"type\": \"string\" }\n      },\n      \"required\": [\n        \"title\",\n        \"address\",\n        \"price_in_usd\",\n        \"url\"\n      ]\n    }\n  }\n}",
+        "options": {
+          "systemPromptTemplate": "You are an expert real estate data extractor. Analyze the given Zillow property data and extract clear, structured details for each property.\n\nFor every property found, provide the following information in a neat, readable format (not JSON):\n\nTitle:\nAddress:\nPrice (INR):\nPrice (USD):\nBedrooms:\nBathrooms:\nProperty Type:\nSize (sqft):\nRealtor:\nImage URL:\nListing URL:\nFinal Recommendation: (Give a short, actionable recommendation for buyers or investors, such as “Best for first-time buyers” or “Good rental potential.”)\nGuidelines:\n\nKeep the format consistent for each property.\nIf any detail is missing, leave it blank.\nConvert USD to INR where applicable.\nMake sure all data is accurate, complete, and clearly labeled.\nUse Zillow listings only.\nAlways include a Final Recommendation for each property\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        -624,
+        -640
+      ],
+      "id": "6e194552-e6fe-4498-b6d2-b4a591c38445",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        -336
+      ],
+      "id": "35244167-a90d-4736-85b7-951eb390ed83",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "874YL1j3d16qkfZX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -640
+      ],
+      "id": "b932df51-e03a-49ca-9ec1-99c9b2d30569",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a real estate data analyst. Analyze the following Zillow property listings and extract the details for each property using the exact field names below. For every property, provide the information in a clear, readable format (not JSON):\n\nAddress:\nPrice(PKR):\nPrice(USD):\nBedrooms:\nBathrooms:\nProperty Type:\nSize(Sqft):\nRealtor:\nImage URL:\nListing URL:\nFinal Recommendation: (Give a short, actionable recommendation for buyers or investors, such as “Best for first-time buyers” or “Good rental potential.”)\nGuidelines:\n\nUse the exact field names as shown above.\nIf any detail is missing, leave it blank.\nConvert USD to PKR where applicable.\nEnsure all data is accurate, complete, and clearly labeled.\nUse only Zillow listings.\nAlways include a Final Recommendation for each property.\n",
+        "options": {
+          "systemMessage": "You are a real estate analyst specializing in U.S. housing data. Your tasks are to analyze Zillow property listings, extract key details, and generate a clear, human-readable summary for potential buyers or investors. Focus on property insights, pricing patterns, and investment opportunities.\n\nFor each property, ensure you provide the following fields using these exact names:\n\nAddress\nPrice(PKR)\nPrice(USD)\nBedrooms\nBathrooms\nProperty Type\nSize(Sqft)\nRealtor\nImage URL\nListing URL\nFinal Recommendation\nGuidelines:\n\nUse the exact field names as listed above.\nIf any detail is missing, leave it blank.\nConvert USD to PKR where applicable.\nEnsure all data is accurate, complete, and clearly labeled.\nAlways include a Final Recommendation for each property, such as “Best for first-time buyers” or “Good rental potential.”"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        -640
+      ],
+      "id": "a2ab12d8-4ae2-4419-bb0a-f3344a3fa406",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -336
+      ],
+      "id": "ae44e87e-d951-4e89-b425-97c7e2b13d2b",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "874YL1j3d16qkfZX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        368,
+        -336
+      ],
+      "id": "a599387e-4f10-41c2-91a7-1c5f170ff89b",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1pv2-e1HhGVQpnD6IABbEyxbhiFJusl-LVlN-i-RawGM",
+          "mode": "list",
+          "cachedResultName": "Real Estate Analyst",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pv2-e1HhGVQpnD6IABbEyxbhiFJusl-LVlN-i-RawGM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pv2-e1HhGVQpnD6IABbEyxbhiFJusl-LVlN-i-RawGM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Address ": "={{ $json.Address }}",
+            "Price(PKR)": "={{ $json['Price (INR)'] }}",
+            "Price(USD)": "={{ $json['Price (USD)'] }}",
+            "Bedrooms": "={{ $json.Bedrooms }}",
+            "Bathrooms": "={{ $json.Bathrooms }}",
+            "Property Type": "={{ $json['Property Type'] }}",
+            "Size(Sqft)": "={{ $json['Size (sqft)'] }}",
+            "Realtor": "={{ $json.Realtor }}",
+            "Image URL": "={{ $json['Image URL'] }}",
+            "Listing URL": "={{ $json['Listing URL'] }}",
+            "Final Recommendation": "={{ $json['Final Recommendation'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Address ",
+              "displayName": "Address ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price(PKR)",
+              "displayName": "Price(PKR)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price(USD)",
+              "displayName": "Price(USD)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bedrooms",
+              "displayName": "Bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bathrooms",
+              "displayName": "Bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Size(Sqft)",
+              "displayName": "Size(Sqft)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Realtor",
+              "displayName": "Realtor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Listing URL",
+              "displayName": "Listing URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Final Recommendation",
+              "displayName": "Final Recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        -640
+      ],
+      "id": "9304242e-1aa9-43a3-a951-5c4284605a9a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0gBRHWN5k3buhvUH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1pv2-e1HhGVQpnD6IABbEyxbhiFJusl-LVlN-i-RawGM",
+          "mode": "list",
+          "cachedResultName": "Real Estate Analyst",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pv2-e1HhGVQpnD6IABbEyxbhiFJusl-LVlN-i-RawGM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1pv2-e1HhGVQpnD6IABbEyxbhiFJusl-LVlN-i-RawGM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": 0,
+            "Address ": "={{ $('Append row in sheet').item.json['Address '] }}",
+            "Price(PKR)": "={{ $('Append row in sheet').item.json['Price(PKR)'] }}",
+            "Price(USD)": "={{ $('Append row in sheet').item.json['Price(USD)'] }}",
+            "Bedrooms": "={{ $('Append row in sheet').item.json.Bedrooms }}",
+            "Bathrooms": "={{ $('Append row in sheet').item.json.Bathrooms }}",
+            "Property Type": "={{ $('Append row in sheet').item.json['Property Type'] }}",
+            "Size(Sqft)": "={{ $('Append row in sheet').item.json['Size(Sqft)'] }}",
+            "Realtor": "={{ $('Append row in sheet').item.json.Realtor }}",
+            "Image URL": "={{ $('Append row in sheet').item.json['Image URL'] }}",
+            "Listing URL": "={{ $('Append row in sheet').item.json['Listing URL'] }}",
+            "Final Recommendation": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "Address "
+          ],
+          "schema": [
+            {
+              "id": "Address ",
+              "displayName": "Address ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Price(PKR)",
+              "displayName": "Price(PKR)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price(USD)",
+              "displayName": "Price(USD)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bedrooms",
+              "displayName": "Bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Bathrooms",
+              "displayName": "Bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Size(Sqft)",
+              "displayName": "Size(Sqft)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Realtor",
+              "displayName": "Realtor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Listing URL",
+              "displayName": "Listing URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Final Recommendation",
+              "displayName": "Final Recommendation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        -640
+      ],
+      "id": "59deb08a-ae4f-4eec-a509-9b96e166e570",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0gBRHWN5k3buhvUH",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ff62409f-48a9-4464-9db4-decb3047317b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e3f406f51004a0182ea80d7a1cb4074f38211bb43a5013ef1c4c708754af7a35"
+  },
+  "id": "SwY90O2HGtRh7OpM",
+  "tags": []
+}
