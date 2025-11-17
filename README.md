@@ -11,3 +11,5 @@ Usage
 Import the workflow into your n8n instance.
 Configure your Zillow data source and Google Sheets credentials.
 Run the workflow to analyze and export property listings.
+
+Watch Workflow Demo: [https://drive.google.com/file/d/1o_nS3P25pHqPuWzzsKVcWz3ZmtCgc-R9/view?usp=sharing]
